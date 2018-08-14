@@ -128,9 +128,9 @@ namespace InputUtils
             ped.position = Input.mousePosition;
             _results.Clear();
             EventSystem.current.RaycastAll(ped, _results);
-            if (_results.Count > 0)
+            foreach (var result in _results)
             {
-                var receiver = _results[0].gameObject.GetComponent<LongPressReceiver>();
+                var receiver = result.gameObject.GetComponent<LongPressReceiver>();
                 if (receiver) return receiver;
             }
 
