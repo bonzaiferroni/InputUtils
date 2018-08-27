@@ -131,7 +131,7 @@ namespace InputUtils
             foreach (var result in _results)
             {
                 var receiver = result.gameObject.GetComponent<LongPressReceiver>();
-                if (receiver) return receiver;
+                if (receiver && receiver.Interactable) return receiver;
             }
 
             return null;
