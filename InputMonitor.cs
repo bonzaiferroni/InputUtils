@@ -13,6 +13,7 @@ namespace InputUtils
         public static bool Shift { get; private set; }
         public static bool Control { get; private set; }
         public static bool Alt { get; private set; }
+        public static bool LockMouse { get; private set; }
 
         private bool _isDragOriginUi;
         private Vector3 _clickOrigin;
@@ -24,6 +25,8 @@ namespace InputUtils
         {
             if (!EventSystem.current)
                 throw new Exception("InputMonitor expecting an EventSystem in the scene");
+            
+            ControlMouseLock();
             
             CheckDragging();
             InputFieldActive = CheckInput();
@@ -100,6 +103,14 @@ namespace InputUtils
             {
                 _isMouseDown = false;
             }
+        }
+
+        private void ControlMouseLock()
+        {
+            if (!Input.GetKeyDown(KeyCode.Y)) return;
+            
+            LockMouse = !LockMouse;
+            Cursor.lockState = LockMouse ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }
 }
