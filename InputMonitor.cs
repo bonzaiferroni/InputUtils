@@ -107,7 +107,7 @@ namespace InputUtils
 
         private void ControlMouseLock()
         {
-            if (!Input.GetKeyDown(KeyCode.Y)) return;
+            if (InputFieldActive || !Input.GetKeyDown(KeyCode.Y)) return;
             
             LockMouse = !LockMouse;
             Cursor.lockState = LockMouse ? CursorLockMode.Locked : CursorLockMode.None;
