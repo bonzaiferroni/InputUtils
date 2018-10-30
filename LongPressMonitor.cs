@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 namespace InputUtils
 {
-    [RequireComponent(typeof(Graphic))]
     public class LongPressMonitor : MonoBehaviour
     {
         [SerializeField] private float _chargeLength = 1f;
