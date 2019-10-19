@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Bonwerk.InputUtils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace InputUtils
+namespace Bonwerk.InputUtils
 {
-    public class LongPressMonitor : MonoBehaviour
+    public class LongPressMonitor : MonoBehaviour, IListenInput
     {
         [SerializeField] private float _chargeLength = 1f;
         [SerializeField] private bool _interceptRightClick;
@@ -27,9 +26,9 @@ namespace InputUtils
             BeginInactive();
         }
 
-        private void Update()
+        public void UpdateInput(InputMonitor monitor)
         {
-            ManageState();
+            ManageState(monitor);
             RightClick();
         }
 
@@ -40,7 +39,7 @@ namespace InputUtils
             if (_charging) BeginCharged();
         }
 
-        private void ManageState()
+        private void ManageState(InputMonitor monitor)
         {
             switch (State)
             {
@@ -48,10 +47,10 @@ namespace InputUtils
                     ManageInactive();
                     break;
                 case LongPressState.Charging:
-                    ManageCharging();
+                    ManageCharging(monitor);
                     break;
                 case LongPressState.Charged:
-                    ManageCharged();
+                    ManageCharged(monitor);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -67,9 +66,9 @@ namespace InputUtils
             }
         }
 
-        private void ManageCharging()
+        private void ManageCharging(InputMonitor monitor)
         {
-            if (!Input.GetMouseButton(0) || InputMonitor.IsDragging)
+            if (!Input.GetMouseButton(0) || monitor.IsDragging)
             {
                 BeginInactive();
                 return;
@@ -87,9 +86,9 @@ namespace InputUtils
             _indicator.fillAmount = progress;
         }
 
-        private void ManageCharged()
+        private void ManageCharged(InputMonitor monitor)
         {
-            if (!Input.GetMouseButton(0) || InputMonitor.IsDragging)
+            if (!Input.GetMouseButton(0) || monitor.IsDragging)
             {
                 BeginInactive();
                 return;

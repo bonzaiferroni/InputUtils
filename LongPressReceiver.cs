@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace InputUtils
+namespace Bonwerk.InputUtils
 {
     public class LongPressReceiver : MonoBehaviour
     {

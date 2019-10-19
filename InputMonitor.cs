@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Bonwerk.Injection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,26 +9,69 @@ namespace Bonwerk.InputUtils
 {
     public class InputMonitor : MonoBehaviour
     {
-        public static bool IsDragging { get; private set; }
-        public static bool InputFieldActive { get; private set; }
-        public static bool OverUi { get; private set; }
-        public static bool Shift { get; private set; }
-        public static bool Control { get; private set; }
-        public static bool Alt { get; private set; }
-        public static bool LockMouse { get; private set; }
+        public bool IsDragging { get; private set; }
+        public bool InputFieldActive { get; private set; }
+        public bool OverUi { get; private set; }
+        public bool Shift { get; private set; }
+        public bool Control { get; private set; }
+        public bool Alt { get; private set; }
+        public bool LockMouse { get; private set; }
 
-        private bool _isDragOriginUi;
-        private Vector3 _clickOrigin;
-        private bool _isMouseDown0;
-        private bool _isMouseDown1;
-        private float _dragSensitivity = 5;
-        private bool _endDragging;
+        [SerializeField] private KeyCode _lockMouse = KeyCode.F1;
+        
+        private bool IsDragOriginUi;
+        private Vector3 ClickOrigin;
+        private bool IsMouseDown0;
+        private bool IsMouseDown1;
+        private float DragSensitivity = 5;
+        private bool EndDragging;
+        private List<InputListener> Listeners { get; } = new List<InputListener>();
+        private bool MouseUp0;
+        private bool MouseUp1;
 
+        private void Awake()
+        {
+            Presto.Bind(this);
+        }
+
+        public void AddListener(IListenInput listener, int priority = int.MaxValue)
+        {
+            var newItem = new InputListener(listener, priority);
+            for (int i = 0; i < Listeners.Count; i++)
+            {
+                var item = Listeners[i];
+                if (priority > item.Priority) continue;
+                Listeners.Insert(i, newItem);
+                return;
+            }
+            Listeners.Add(newItem);
+        }
+
+        public bool ConsumeMouseUp(int mouseCode)
+        {
+            switch (mouseCode)
+            {
+                case 0 when !MouseUp0:
+                    return false;
+                case 0:
+                    MouseUp0 = false;
+                    return true;
+                case 1 when !MouseUp1:
+                    return false;
+                case 1:
+                    MouseUp1 = false;
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        
         private void Update()
         {
             if (!EventSystem.current)
                 throw new Exception("InputMonitor expecting an EventSystem in the scene");
-            
+
+            ResetConsumedKeys();
             ControlMouseLock();
             
             CheckDragging();
@@ -35,6 +80,14 @@ namespace Bonwerk.InputUtils
 
             MonitorModifiers();
             MonitorClick();
+
+            UpdateListeners();
+        }
+
+        private void ResetConsumedKeys()
+        {
+            MouseUp0 = Input.GetMouseButtonUp(0);
+            MouseUp1 = Input.GetMouseButtonUp(1);
         }
 
         private void MonitorModifiers()
@@ -46,25 +99,25 @@ namespace Bonwerk.InputUtils
 
         private void CheckDragging()
         {
-            if (_isMouseDown0 || _isMouseDown1)
+            if (IsMouseDown0 || IsMouseDown1)
             {
-                if (!IsDragging && Vector3.Distance(_clickOrigin, Input.mousePosition) > _dragSensitivity)
+                if (!IsDragging && Vector3.Distance(ClickOrigin, Input.mousePosition) > DragSensitivity)
                 {
                     IsDragging = true;
                 }
             }
             else
             {
-                if (_endDragging)
+                if (EndDragging)
                 {
                     // ensures it will end on the next frame after release
-                    _endDragging = false;
+                    EndDragging = false;
                     IsDragging = false;
                 }
 
                 if (IsDragging)
                 {
-                    _endDragging = true;
+                    EndDragging = true;
                 }
             }
         }
@@ -85,7 +138,7 @@ namespace Bonwerk.InputUtils
         {
             if (IsDragging)
             {
-                return _isDragOriginUi;
+                return IsDragOriginUi;
             }
 
             return EventSystem.current.IsPointerOverGameObject();
@@ -95,35 +148,59 @@ namespace Bonwerk.InputUtils
         {
             if (Input.GetMouseButtonDown(0))
             {
-                _clickOrigin = Input.mousePosition;
-                _isMouseDown0 = true;
-                _isDragOriginUi = EventSystem.current.IsPointerOverGameObject();
+                ClickOrigin = Input.mousePosition;
+                IsMouseDown0 = true;
+                IsDragOriginUi = EventSystem.current.IsPointerOverGameObject();
             }
 
             if (Input.GetMouseButtonUp(0))
             {
-                _isMouseDown0 = false;
+                IsMouseDown0 = false;
             }
 
             if (Input.GetMouseButtonDown(1))
             {
-                _clickOrigin = Input.mousePosition;
-                _isMouseDown1 = true;
-                _isDragOriginUi = EventSystem.current.IsPointerOverGameObject();
+                ClickOrigin = Input.mousePosition;
+                IsMouseDown1 = true;
+                IsDragOriginUi = EventSystem.current.IsPointerOverGameObject();
             }
 
             if (Input.GetMouseButtonUp(1))
             {
-                _isMouseDown1 = false;
+                IsMouseDown1 = false;
             }
         }
 
         private void ControlMouseLock()
         {
-            if (InputFieldActive || !Input.GetKeyDown(KeyCode.Y)) return;
+            if (InputFieldActive || !Input.GetKeyDown(_lockMouse)) return;
             
             LockMouse = !LockMouse;
             Cursor.lockState = LockMouse ? CursorLockMode.Locked : CursorLockMode.None;
         }
+
+        private void UpdateListeners()
+        {
+            foreach (var item in Listeners)
+            {
+                item.Listener.UpdateInput(this); 
+            }
+        }
+
+        #region Classes
+
+        private class InputListener
+        {
+            public InputListener(IListenInput listener, int priority)
+            {
+                Listener = listener;
+                Priority = priority;
+            }
+
+            public IListenInput Listener { get; }
+            public int Priority { get; }
+        }
+
+        #endregion
     }
 }

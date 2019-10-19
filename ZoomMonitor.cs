@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace InputUtils
+namespace Bonwerk.InputUtils
 {
     public class ZoomMonitor : MonoBehaviour
     {

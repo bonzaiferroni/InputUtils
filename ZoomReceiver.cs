@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace InputUtils
+namespace Bonwerk.InputUtils
 {
     public class ZoomReceiver : MonoBehaviour
     {
