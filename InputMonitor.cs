@@ -17,7 +17,8 @@ namespace Bonwerk.InputUtils
 
         private bool _isDragOriginUi;
         private Vector3 _clickOrigin;
-        private bool _isMouseDown;
+        private bool _isMouseDown0;
+        private bool _isMouseDown1;
         private float _dragSensitivity = 5;
         private bool _endDragging;
 
@@ -45,7 +46,7 @@ namespace Bonwerk.InputUtils
 
         private void CheckDragging()
         {
-            if (_isMouseDown)
+            if (_isMouseDown0 || _isMouseDown1)
             {
                 if (!IsDragging && Vector3.Distance(_clickOrigin, Input.mousePosition) > _dragSensitivity)
                 {
@@ -95,13 +96,25 @@ namespace Bonwerk.InputUtils
             if (Input.GetMouseButtonDown(0))
             {
                 _clickOrigin = Input.mousePosition;
-                _isMouseDown = true;
+                _isMouseDown0 = true;
                 _isDragOriginUi = EventSystem.current.IsPointerOverGameObject();
             }
 
             if (Input.GetMouseButtonUp(0))
             {
-                _isMouseDown = false;
+                _isMouseDown0 = false;
+            }
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                _clickOrigin = Input.mousePosition;
+                _isMouseDown1 = true;
+                _isDragOriginUi = EventSystem.current.IsPointerOverGameObject();
+            }
+
+            if (Input.GetMouseButtonUp(1))
+            {
+                _isMouseDown1 = false;
             }
         }
 
